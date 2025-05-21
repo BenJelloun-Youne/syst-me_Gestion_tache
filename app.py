@@ -540,7 +540,8 @@ with tab2:
             end_date = today
             days_remaining = None
         
-        duration = (end_date - start_date).days
+        # S'assurer que la durée est au moins de 1 jour
+        duration = max(1, (end_date - start_date).days)
         
         # Déterminer la couleur et le texte du statut
         if task_status == 'ok':
@@ -598,7 +599,8 @@ with tab2:
             tickvals=list(range(0, len(date_range), 7)),
             tickangle=45,
             gridcolor='rgba(0,0,0,0.1)',
-            zerolinecolor='rgba(0,0,0,0.1)'
+            zerolinecolor='rgba(0,0,0,0.1)',
+            range=[0, max(30, len(date_range))]  # Assurer une largeur minimale
         ),
         yaxis=dict(
             gridcolor='rgba(0,0,0,0.1)',
