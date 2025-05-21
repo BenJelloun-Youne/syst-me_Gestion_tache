@@ -323,9 +323,9 @@ with tab2:
     
     # Couleurs pour les différents statuts
     colors = {
-        'en cours': '#FFA500',
-        'OK': '#4CAF50',
-        'non démarré': '#808080'
+        'en cours': '#ffc107',  # Jaune
+        'OK': '#007bff',       # Bleu
+        'non démarré': '#28a745'  # Vert
     }
     
     # Ajout des tâches au graphique
@@ -337,11 +337,11 @@ with tab2:
             
             # Ajuster la couleur en fonction de la priorité
             if days_remaining < 0:
-                color = '#dc3545'  # Rouge pour les tâches en retard
+                color = '#ffc107'  # Jaune pour les tâches en retard
             elif days_remaining <= 7:
                 color = '#ffc107'  # Jaune pour les tâches à surveiller
             else:
-                color = colors.get(task['status'], '#808080')
+                color = colors.get(task['status'], '#28a745')  # Vert par défaut
             
             fig.add_trace(go.Bar(
                 x=[(deadline - start_date).days],
@@ -380,7 +380,7 @@ with tab2:
             df,
             names='status',
             title='Répartition par statut',
-            color_discrete_sequence=['#808080', '#FFA500', '#4CAF50']
+            color_discrete_sequence=['#28a745', '#ffc107', '#007bff']  # Vert, Jaune, Bleu
         )
         st.plotly_chart(fig_status, use_container_width=True)
     
@@ -392,7 +392,7 @@ with tab2:
             y='count',
             title='Tâches par responsable',
             color='responsible',
-            color_discrete_sequence=px.colors.qualitative.Set3
+            color_discrete_sequence=['#28a745', '#ffc107', '#007bff']  # Vert, Jaune, Bleu
         )
         st.plotly_chart(fig_responsible, use_container_width=True)
 
