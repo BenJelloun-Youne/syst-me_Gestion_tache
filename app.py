@@ -395,10 +395,15 @@ with tab1:
             with col2:
                 # Ajouter un sélecteur pour modifier le statut
                 with st.form(f"status_form_{row['id']}"):
+                    # Définir les statuts disponibles
+                    status_options = ["non démarré", "en cours", "ok"]
+                    # Trouver l'index du statut actuel
+                    current_status_index = status_options.index(row['status'].lower())
+                    
                     new_status = st.selectbox(
                         "📊 Statut",
-                        ["Non démarré", "En cours", "OK"],
-                        index=["Non démarré", "En cours", "OK"].index(row['status']),
+                        status_options,
+                        index=current_status_index,
                         key=f"status_{row['id']}"
                     )
                     if st.form_submit_button("🔄 Mettre à jour le statut"):
