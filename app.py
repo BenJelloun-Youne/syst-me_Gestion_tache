@@ -560,14 +560,15 @@ with tab2:
                 name=task['task_name'],
                 marker_color=color,
                 width=0.8,
-                text=[f"""
+                text=None,  # Enlever le texte sur la barre
+                hovertemplate=f"""
                     <b>{task['task_name']}</b><br>
                     Deadline: {task['deadline']}<br>
                     Responsable: {task['responsible']}<br>
                     Statut: {status_text}<br>
                     {progress_text}
-                """],
-                hovertemplate="%{text}<extra></extra>"
+                <extra></extra>
+                """
             ))
     
     # Mise à jour du layout avec les dates
