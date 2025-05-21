@@ -85,70 +85,162 @@ except Exception as e:
 # Style CSS personnalisé
 st.markdown("""
     <style>
+    /* Style général */
     .main {
         padding: 2rem;
+        background-color: #f8f9fa;
     }
+    
+    /* Style des onglets */
     .stTabs [data-baseweb="tab-list"] {
         gap: 2rem;
+        background-color: #ffffff;
+        padding: 1rem;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
+    
     .stTabs [data-baseweb="tab"] {
         height: 4rem;
         white-space: pre-wrap;
-        background-color: #f0f2f6;
-        border-radius: 4px 4px 0 0;
-        gap: 1rem;
-        padding-top: 10px;
-        padding-bottom: 10px;
-    }
-    .stTabs [aria-selected="true"] {
-        background-color: #4CAF50;
-        color: white;
-    }
-    div[data-testid="stExpander"] div[data-testid="stExpander"] {
-        border: 1px solid #e0e0e0;
+        background-color: #f8f9fa;
         border-radius: 8px;
+        gap: 1rem;
         padding: 1rem;
-        margin: 0.5rem 0;
+        margin: 0.5rem;
+        transition: all 0.3s ease;
+        border: 1px solid #e9ecef;
     }
-    div[data-testid="stExpander"] div[data-testid="stExpander"]:hover {
-        border-color: #4CAF50;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    
+    .stTabs [data-baseweb="tab"]:hover {
+        background-color: #e9ecef;
+        transform: translateY(-2px);
     }
+    
+    .stTabs [aria-selected="true"] {
+        background-color: #007bff;
+        color: white;
+        box-shadow: 0 4px 6px rgba(0,123,255,0.2);
+    }
+    
+    /* Style de la sidebar */
+    [data-testid="stSidebar"] {
+        background-color: #ffffff;
+        padding: 2rem 1rem;
+        box-shadow: 2px 0 5px rgba(0,0,0,0.05);
+    }
+    
+    [data-testid="stSidebar"] .sidebar-content {
+        background-color: #ffffff;
+    }
+    
+    /* Style des sélecteurs */
+    .stSelectbox, .stMultiselect {
+        background-color: #ffffff;
+        border-radius: 8px;
+        border: 1px solid #e9ecef;
+        padding: 0.5rem;
+    }
+    
+    /* Style des métriques */
+    .metric-card {
+        background-color: #ffffff;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin: 1rem 0;
+        border: 1px solid #e9ecef;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        transition: all 0.3s ease;
+    }
+    
+    .metric-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    /* Style des boutons */
     .stButton>button {
         width: 100%;
-        border-radius: 20px;
+        border-radius: 8px;
         height: 3em;
-        background-color: #4CAF50;
+        background-color: #007bff;
         color: white;
+        border: none;
+        font-weight: 600;
+        transition: all 0.3s ease;
     }
+    
     .stButton>button:hover {
-        background-color: #45a049;
+        background-color: #0056b3;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px rgba(0,123,255,0.2);
     }
+    
+    /* Style des expanders */
+    div[data-testid="stExpander"] div[data-testid="stExpander"] {
+        background-color: #ffffff;
+        border: 1px solid #e9ecef;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin: 1rem 0;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        transition: all 0.3s ease;
+    }
+    
+    div[data-testid="stExpander"] div[data-testid="stExpander"]:hover {
+        border-color: #007bff;
+        box-shadow: 0 4px 8px rgba(0,123,255,0.1);
+        transform: translateY(-2px);
+    }
+    
+    /* Couleurs des statuts */
     .no-deadline {
         color: #28a745;
         font-style: italic;
+        font-weight: 500;
     }
-    .metric-card {
-        background-color: #f8f9fa;
-        border-radius: 10px;
-        padding: 1rem;
-        margin: 0.5rem 0;
-        border: 1px solid #e0e0e0;
-    }
-    .metric-card:hover {
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
+    
     .urgent {
         color: #ffc107;
-        font-weight: bold;
+        font-weight: 600;
     }
+    
     .warning {
         color: #ffc107;
-        font-weight: bold;
+        font-weight: 600;
     }
+    
     .success {
         color: #007bff;
-        font-weight: bold;
+        font-weight: 600;
+    }
+    
+    /* Style du titre principal */
+    h1 {
+        color: #2E4053;
+        font-size: 2.5rem;
+        font-weight: 700;
+        text-align: center;
+        margin-bottom: 2rem;
+        padding: 1rem;
+        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    
+    /* Style des sous-titres */
+    h2, h3 {
+        color: #2E4053;
+        font-weight: 600;
+        margin: 1.5rem 0 1rem 0;
+    }
+    
+    /* Style des séparateurs */
+    hr {
+        border: none;
+        height: 1px;
+        background: linear-gradient(to right, transparent, #e9ecef, transparent);
+        margin: 2rem 0;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -195,33 +287,36 @@ def get_deadline_comment(days_remaining, current_status):
 
 # Sidebar
 with st.sidebar:
-    st.image("https://img.icons8.com/fluency/96/task.png", width=100)
-    st.title("Menu")
+    st.markdown("""
+        <div style='text-align: center; margin-bottom: 2rem;'>
+            <img src="https://img.icons8.com/fluency/96/task.png" width="80" style='margin-bottom: 1rem;'>
+            <h2 style='color: #2E4053; margin: 0;'>Menu</h2>
+        </div>
+    """, unsafe_allow_html=True)
     st.markdown("---")
     
-    # Filtres globaux
-    st.subheader("Filtres")
+    # Filtres globaux avec style amélioré
+    st.markdown("### 🎯 Filtres")
     status_filter = st.multiselect(
-        "Statut",
+        "📊 Statut",
         ["Tous", "Non démarré", "En cours", "OK"],
         default=["Tous"]
     )
     
     responsible_filter = st.multiselect(
-        "Responsable",
+        "👥 Responsable",
         ["Tous", "Youness", "Mehdi", "Salma"],
         default=["Tous"]
     )
     
-    # Filtre par priorité
     priority_filter = st.multiselect(
-        "Priorité",
+        "⚡ Priorité",
         ["Tous", "Urgent", "À surveiller", "Dans les temps"],
         default=["Tous"]
     )
     
     st.markdown("---")
-    st.markdown("### Statistiques rapides")
+    st.markdown("### 📈 Statistiques rapides")
     
     # Connexion à la base de données
     conn = sqlite3.connect('roadmap.db')
