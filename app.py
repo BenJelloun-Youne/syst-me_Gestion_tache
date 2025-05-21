@@ -4,6 +4,7 @@ import plotly.express as px
 from datetime import datetime, timedelta
 import sqlite3
 import plotly.graph_objects as go
+import os
 
 # Configuration de la page
 st.set_page_config(
@@ -12,6 +13,41 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+# Fonction pour initialiser la base de données
+def init_db():
+    conn = sqlite3.connect('roadmap.db')
+    c = conn.cursor()
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS tasks (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            task_name TEXT NOT NULL,
+            description TEXT,
+            status TEXT,
+            responsible TEXT,
+            deadline TEXT,
+            comments TEXT
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
+# Fonction pour ajouter une tâche
+def add_task(task_name, description, status, responsible, deadline, comments):
+    conn = sqlite3.connect('roadmap.db')
+    c = conn.cursor()
+    c.execute('''
+        INSERT INTO tasks (task_name, description, status, responsible, deadline, comments)
+        VALUES (?, ?, ?, ?, ?, ?)
+    ''', (task_name, description, status, responsible, deadline, comments))
+    conn.commit()
+    conn.close()
+
+# Initialiser la base de données si elle n'existe pas
+if not os.path.exists('roadmap.db'):
+    init_db()
+    # Importer les tâches initiales
+    import import_tasks
 
 # Style CSS personnalisé
 st.markdown("""
@@ -140,6 +176,7 @@ with st.sidebar:
     # Connexion à la base de données
     conn = sqlite3.connect('roadmap.db')
     df = pd.read_sql_query("SELECT * FROM tasks", conn)
+    conn.close()
     
     # Calcul des statistiques
     total_tasks = len(df)
