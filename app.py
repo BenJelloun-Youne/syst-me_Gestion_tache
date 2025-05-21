@@ -424,6 +424,7 @@ with tab2:
     # Calculer la plage de dates pour l'axe X
     min_date = None
     max_date = None
+    today = datetime.now().date()
     
     # Trouver la première et la dernière date dans les deadlines
     for _, task in df.iterrows():
@@ -436,7 +437,7 @@ with tab2:
     
     # Si aucune date n'est trouvée, utiliser la date d'aujourd'hui
     if min_date is None:
-        min_date = datetime.now().date()
+        min_date = today
     if max_date is None:
         max_date = min_date + timedelta(days=30)
     else:
@@ -452,30 +453,42 @@ with tab2:
             deadline = datetime.strptime(task['deadline'], '%Y-%m-%d')
             days_remaining = get_days_remaining(task['deadline'])
             
-            # Déterminer la couleur en fonction du statut
+            # Déterminer la couleur et le style en fonction du statut
             if task['status'] == 'OK':
                 color = colors['OK']  # Bleu pour les tâches terminées
+                status_text = "✅ Déployé"
+            elif task['status'] == 'en cours':
+                color = colors['en cours']  # Jaune pour les tâches en cours
+                status_text = "🔄 En cours"
             elif days_remaining is None and task['status'] != 'OK':
                 color = '#ffc107'  # Jaune pour les tâches en retard
+                status_text = "⚠️ En retard"
             else:
                 color = colors[task['status']]  # Couleur selon le statut
+                status_text = "⏳ En attente"
             
             # Calculer la position sur l'axe X
             x_position = (deadline.date() - min_date).days
             
             # Créer le texte pour le tooltip
-            status_text = "Terminée" if task['status'] == 'OK' else (
-                "En retard" if days_remaining is None else f"{days_remaining} jours restants"
-            )
+            tooltip_text = f"""
+                <b>{task['task_name']}</b><br>
+                Deadline: {task['deadline']}<br>
+                Responsable: {task['responsible']}<br>
+                Statut: {status_text}<br>
+                {f"Jours restants: {days_remaining}" if days_remaining is not None else "En retard"}
+            """
             
+            # Ajouter la barre
             fig.add_trace(go.Bar(
                 x=[x_position],
                 y=[task['task_name']],
                 orientation='h',
                 name=task['task_name'],
                 marker_color=color,
-                text=[f"Deadline: {task['deadline']}<br>Responsable: {task['responsible']}<br>Statut: {task['status']}<br>{status_text}"],
-                hovertemplate="<b>%{y}</b><br>%{text}<extra></extra>"
+                width=0.8,
+                text=[tooltip_text],
+                hovertemplate="%{text}<extra></extra>"
             ))
     
     # Mise à jour du layout avec les dates
@@ -495,7 +508,6 @@ with tab2:
     )
     
     # Ajouter une ligne verticale pour la date d'aujourd'hui
-    today = datetime.now().date()
     if min_date <= today <= max_date:
         today_index = (today - min_date).days
         fig.add_vline(
