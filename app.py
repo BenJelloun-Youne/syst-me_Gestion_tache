@@ -411,6 +411,22 @@ with tab1:
                     st.markdown(f"**Deadline:** ⏳ <span class='no-deadline'>Non définie</span>", unsafe_allow_html=True)
 
 with tab2:
+    st.markdown("""
+        <style>
+        .roadmap-title {
+            text-align: center;
+            color: #2E4053;
+            font-size: 2rem;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        </style>
+        <h1 class="roadmap-title">🗺️ Roadmap des Tâches</h1>
+    """, unsafe_allow_html=True)
+
     # Création du graphique Gantt
     fig = go.Figure()
     
@@ -525,18 +541,34 @@ with tab2:
     
     # Mise à jour du layout avec les dates
     fig.update_layout(
-        title="Timeline des Tâches",
+        title={
+            'text': "Timeline des Tâches",
+            'y':0.95,
+            'x':0.5,
+            'xanchor': 'center',
+            'yanchor': 'top',
+            'font': {'size': 24, 'color': '#2E4053'}
+        },
         xaxis_title="Dates",
         yaxis_title="Tâches",
         showlegend=False,
         height=600,
         template="plotly_white",
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',
         xaxis=dict(
             tickmode='array',
             ticktext=[d.strftime('%d/%m/%Y') for d in date_range[::7]],  # Afficher une date par semaine
             tickvals=list(range(0, len(date_range), 7)),
-            tickangle=45
-        )
+            tickangle=45,
+            gridcolor='rgba(0,0,0,0.1)',
+            zerolinecolor='rgba(0,0,0,0.1)'
+        ),
+        yaxis=dict(
+            gridcolor='rgba(0,0,0,0.1)',
+            zerolinecolor='rgba(0,0,0,0.1)'
+        ),
+        margin=dict(l=20, r=20, t=100, b=20)
     )
     
     # Ajouter une ligne verticale pour la date d'aujourd'hui
@@ -547,36 +579,43 @@ with tab2:
             line_dash="dash",
             line_color="red",
             annotation_text="Aujourd'hui",
-            annotation_position="top right"
+            annotation_position="top right",
+            annotation=dict(
+                font=dict(size=12, color="red"),
+                bgcolor="white",
+                bordercolor="red",
+                borderwidth=1
+            )
         )
+    
+    # Ajouter une légende pour les statuts
+    fig.add_annotation(
+        x=0.5,
+        y=1.1,
+        xref="paper",
+        yref="paper",
+        text="<b>Légende:</b> ✅ Déployé | 🔄 En cours | ⏳ En attente | ⚠️ En retard",
+        showarrow=False,
+        font=dict(size=12, color="#2E4053"),
+        bgcolor="white",
+        bordercolor="#2E4053",
+        borderwidth=1,
+        borderpad=4
+    )
     
     st.plotly_chart(fig, use_container_width=True)
     
-    # Statistiques détaillées
-    st.subheader("📊 Statistiques détaillées")
-    col1, col2 = st.columns(2)
+    # Ajouter des statistiques sous la Timeline
+    col1, col2, col3, col4 = st.columns(4)
     
     with col1:
-        # Graphique de répartition par statut
-        fig_status = px.pie(
-            df,
-            names='status',
-            title='Répartition par statut',
-            color_discrete_sequence=['#28a745', '#ffc107', '#007bff']  # Vert, Jaune, Bleu
-        )
-        st.plotly_chart(fig_status, use_container_width=True)
-    
+        st.metric("Tâches terminées", len(df[df['status'] == 'OK']))
     with col2:
-        # Graphique de répartition par responsable
-        fig_responsible = px.bar(
-            df.groupby('responsible').size().reset_index(name='count'),
-            x='responsible',
-            y='count',
-            title='Tâches par responsable',
-            color='responsible',
-            color_discrete_sequence=['#28a745', '#ffc107', '#007bff']  # Vert, Jaune, Bleu
-        )
-        st.plotly_chart(fig_responsible, use_container_width=True)
+        st.metric("Tâches en cours", len(df[df['status'] == 'en cours']))
+    with col3:
+        st.metric("Tâches en attente", len(df[df['status'] == 'non démarré']))
+    with col4:
+        st.metric("Tâches en retard", len(df[(df['status'] != 'OK') & (df['deadline'].apply(lambda x: pd.notna(x) and datetime.strptime(x, '%Y-%m-%d').date() < today))]))
 
 with tab3:
     st.subheader("Ajouter une nouvelle tâche")
