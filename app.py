@@ -257,12 +257,12 @@ def get_days_remaining(deadline):
         return None
     deadline_date = datetime.strptime(deadline, '%Y-%m-%d')
     today = datetime.now().date()
+    if deadline_date.date() < today:
+        return None
     return (deadline_date.date() - today).days
 
 def get_deadline_status(days_remaining, current_status):
     if days_remaining is None:
-        return "Non définie"
-    if days_remaining < 0:
         if current_status == "OK":
             return "Délai respecté"
         else:
@@ -274,12 +274,10 @@ def get_deadline_status(days_remaining, current_status):
 
 def get_deadline_comment(days_remaining, current_status):
     if days_remaining is None:
-        return "Non définie"
-    if days_remaining < 0:
         if current_status == "OK":
             return "Délai respecté"
         else:
-            return f"En retard de {abs(days_remaining)} jours"
+            return "En retard"
     elif days_remaining <= 7:
         return f"{days_remaining} jours restants"
     else:
@@ -423,6 +421,24 @@ with tab2:
         'non démarré': '#28a745'  # Vert
     }
     
+    # Calculer la plage de dates pour l'axe X
+    today = datetime.now().date()
+    min_date = today
+    max_date = today
+    
+    # Trouver la date la plus éloignée dans les deadlines
+    for _, task in df.iterrows():
+        if pd.notna(task['deadline']):
+            deadline = datetime.strptime(task['deadline'], '%Y-%m-%d').date()
+            if deadline > max_date:
+                max_date = deadline
+    
+    # Ajouter 30 jours à la date maximale pour la visualisation
+    max_date = max_date + timedelta(days=30)
+    
+    # Créer les dates pour l'axe X
+    date_range = pd.date_range(start=min_date, end=max_date, freq='D')
+    
     # Ajout des tâches au graphique
     for _, task in df.iterrows():
         if pd.notna(task['deadline']):
@@ -431,7 +447,7 @@ with tab2:
             days_remaining = get_days_remaining(task['deadline'])
             
             # Ajuster la couleur en fonction de la priorité
-            if days_remaining < 0:
+            if days_remaining is None:
                 color = '#ffc107'  # Jaune pour les tâches en retard
             elif days_remaining <= 7:
                 color = '#ffc107'  # Jaune pour les tâches à surveiller
@@ -444,23 +460,34 @@ with tab2:
                 orientation='h',
                 name=task['task_name'],
                 marker_color=color,
-                text=[f"Deadline: {task['deadline']}<br>Responsable: {task['responsible']}<br>Jours restants: {days_remaining}"],
+                text=[f"Deadline: {task['deadline']}<br>Responsable: {task['responsible']}<br>Jours restants: {days_remaining if days_remaining is not None else 'En retard'}"],
                 hovertemplate="<b>%{y}</b><br>%{text}<extra></extra>"
             ))
     
-    # Mise à jour du layout
+    # Mise à jour du layout avec les dates
     fig.update_layout(
         title="Timeline des Tâches",
-        xaxis_title="Jours avant deadline",
+        xaxis_title="Dates",
         yaxis_title="Tâches",
         showlegend=False,
         height=600,
         template="plotly_white",
         xaxis=dict(
-            tickmode='linear',
-            tick0=0,
-            dtick=7
+            tickmode='array',
+            ticktext=[d.strftime('%d/%m/%Y') for d in date_range[::7]],  # Afficher une date par semaine
+            tickvals=list(range(0, len(date_range), 7)),
+            tickangle=45
         )
+    )
+    
+    # Ajouter une ligne verticale pour la date d'aujourd'hui
+    today_index = (today - min_date).days
+    fig.add_vline(
+        x=today_index,
+        line_dash="dash",
+        line_color="red",
+        annotation_text="Aujourd'hui",
+        annotation_position="top right"
     )
     
     st.plotly_chart(fig, use_container_width=True)
