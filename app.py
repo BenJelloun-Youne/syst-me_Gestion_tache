@@ -6,6 +6,7 @@ import sqlite3
 import plotly.graph_objects as go
 import os
 import sys
+import tempfile
 
 # Configuration de la page
 st.set_page_config(
@@ -15,10 +16,20 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# Fonction pour obtenir le chemin de la base de données
+def get_db_path():
+    if os.environ.get('STREAMLIT_SERVER_RUNNING'):
+        # Sur Streamlit Cloud, utiliser un chemin temporaire
+        return os.path.join(tempfile.gettempdir(), 'roadmap.db')
+    else:
+        # En local, utiliser le chemin normal
+        return 'roadmap.db'
+
 # Fonction pour initialiser la base de données
 def init_db():
     try:
-        conn = sqlite3.connect('roadmap.db')
+        db_path = get_db_path()
+        conn = sqlite3.connect(db_path)
         c = conn.cursor()
         c.execute('''
             CREATE TABLE IF NOT EXISTS tasks (
@@ -41,7 +52,8 @@ def init_db():
 # Fonction pour ajouter une tâche
 def add_task(task_name, description, status, responsible, deadline, comments):
     try:
-        conn = sqlite3.connect('roadmap.db')
+        db_path = get_db_path()
+        conn = sqlite3.connect(db_path)
         c = conn.cursor()
         c.execute('''
             INSERT INTO tasks (task_name, description, status, responsible, deadline, comments)
@@ -56,7 +68,8 @@ def add_task(task_name, description, status, responsible, deadline, comments):
 
 # Initialiser la base de données si elle n'existe pas
 try:
-    if not os.path.exists('roadmap.db'):
+    db_path = get_db_path()
+    if not os.path.exists(db_path):
         init_db()
         # Importer les tâches initiales
         try:
