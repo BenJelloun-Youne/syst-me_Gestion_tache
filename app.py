@@ -447,8 +447,11 @@ with tab2:
     # Créer les dates pour l'axe X
     date_range = pd.date_range(start=min_date, end=max_date, freq='D')
     
+    # Trier les tâches par date de deadline
+    sorted_tasks = df.sort_values(by='deadline')
+    
     # Ajout des tâches au graphique
-    for _, task in df.iterrows():
+    for _, task in sorted_tasks.iterrows():
         if pd.notna(task['deadline']):
             deadline = datetime.strptime(task['deadline'], '%Y-%m-%d')
             days_remaining = get_days_remaining(task['deadline'])
@@ -457,39 +460,68 @@ with tab2:
             if task['status'] == 'OK':
                 color = colors['OK']  # Bleu pour les tâches terminées
                 status_text = "✅ Déployé"
+                # Ajouter une barre de progression complète
+                fig.add_trace(go.Bar(
+                    x=[(deadline.date() - min_date).days],
+                    y=[task['task_name']],
+                    orientation='h',
+                    name=task['task_name'],
+                    marker_color=color,
+                    width=0.8,
+                    text=[f"""
+                        <b>{task['task_name']}</b><br>
+                        Deadline: {task['deadline']}<br>
+                        Responsable: {task['responsible']}<br>
+                        Statut: {status_text}<br>
+                        Tâche terminée
+                    """],
+                    hovertemplate="%{text}<extra></extra>"
+                ))
             elif task['status'] == 'en cours':
                 color = colors['en cours']  # Jaune pour les tâches en cours
                 status_text = "🔄 En cours"
-            elif days_remaining is None and task['status'] != 'OK':
-                color = '#ffc107'  # Jaune pour les tâches en retard
-                status_text = "⚠️ En retard"
+                # Ajouter une barre de progression partielle
+                progress_position = (today - min_date).days
+                deadline_position = (deadline.date() - min_date).days
+                
+                # Barre de progression
+                fig.add_trace(go.Bar(
+                    x=[progress_position],
+                    y=[task['task_name']],
+                    orientation='h',
+                    name=task['task_name'],
+                    marker_color=color,
+                    width=0.8,
+                    text=[f"""
+                        <b>{task['task_name']}</b><br>
+                        Deadline: {task['deadline']}<br>
+                        Responsable: {task['responsible']}<br>
+                        Statut: {status_text}<br>
+                        {f"Jours restants: {days_remaining}" if days_remaining is not None else "En retard"}
+                    """],
+                    hovertemplate="%{text}<extra></extra>"
+                ))
             else:
                 color = colors[task['status']]  # Couleur selon le statut
-                status_text = "⏳ En attente"
-            
-            # Calculer la position sur l'axe X
-            x_position = (deadline.date() - min_date).days
-            
-            # Créer le texte pour le tooltip
-            tooltip_text = f"""
-                <b>{task['task_name']}</b><br>
-                Deadline: {task['deadline']}<br>
-                Responsable: {task['responsible']}<br>
-                Statut: {status_text}<br>
-                {f"Jours restants: {days_remaining}" if days_remaining is not None else "En retard"}
-            """
-            
-            # Ajouter la barre
-            fig.add_trace(go.Bar(
-                x=[x_position],
-                y=[task['task_name']],
-                orientation='h',
-                name=task['task_name'],
-                marker_color=color,
-                width=0.8,
-                text=[tooltip_text],
-                hovertemplate="%{text}<extra></extra>"
-            ))
+                status_text = "⏳ En attente" if task['status'] == 'non démarré' else "⚠️ En retard"
+                
+                # Ajouter la barre
+                fig.add_trace(go.Bar(
+                    x=[(deadline.date() - min_date).days],
+                    y=[task['task_name']],
+                    orientation='h',
+                    name=task['task_name'],
+                    marker_color=color,
+                    width=0.8,
+                    text=[f"""
+                        <b>{task['task_name']}</b><br>
+                        Deadline: {task['deadline']}<br>
+                        Responsable: {task['responsible']}<br>
+                        Statut: {status_text}<br>
+                        {f"Jours restants: {days_remaining}" if days_remaining is not None else "En retard"}
+                    """],
+                    hovertemplate="%{text}<extra></extra>"
+                ))
     
     # Mise à jour du layout avec les dates
     fig.update_layout(
