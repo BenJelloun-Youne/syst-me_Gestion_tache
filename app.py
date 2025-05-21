@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 import sqlite3
 import plotly.graph_objects as go
 import os
+import sys
 
 # Configuration de la page
 st.set_page_config(
@@ -16,38 +17,56 @@ st.set_page_config(
 
 # Fonction pour initialiser la base de données
 def init_db():
-    conn = sqlite3.connect('roadmap.db')
-    c = conn.cursor()
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS tasks (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            task_name TEXT NOT NULL,
-            description TEXT,
-            status TEXT,
-            responsible TEXT,
-            deadline TEXT,
-            comments TEXT
-        )
-    ''')
-    conn.commit()
-    conn.close()
+    try:
+        conn = sqlite3.connect('roadmap.db')
+        c = conn.cursor()
+        c.execute('''
+            CREATE TABLE IF NOT EXISTS tasks (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                task_name TEXT NOT NULL,
+                description TEXT,
+                status TEXT,
+                responsible TEXT,
+                deadline TEXT,
+                comments TEXT
+            )
+        ''')
+        conn.commit()
+        conn.close()
+        st.success("Base de données initialisée avec succès!")
+    except Exception as e:
+        st.error(f"Erreur lors de l'initialisation de la base de données: {str(e)}")
+        sys.exit(1)
 
 # Fonction pour ajouter une tâche
 def add_task(task_name, description, status, responsible, deadline, comments):
-    conn = sqlite3.connect('roadmap.db')
-    c = conn.cursor()
-    c.execute('''
-        INSERT INTO tasks (task_name, description, status, responsible, deadline, comments)
-        VALUES (?, ?, ?, ?, ?, ?)
-    ''', (task_name, description, status, responsible, deadline, comments))
-    conn.commit()
-    conn.close()
+    try:
+        conn = sqlite3.connect('roadmap.db')
+        c = conn.cursor()
+        c.execute('''
+            INSERT INTO tasks (task_name, description, status, responsible, deadline, comments)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (task_name, description, status, responsible, deadline, comments))
+        conn.commit()
+        conn.close()
+        return True
+    except Exception as e:
+        st.error(f"Erreur lors de l'ajout de la tâche: {str(e)}")
+        return False
 
 # Initialiser la base de données si elle n'existe pas
-if not os.path.exists('roadmap.db'):
-    init_db()
-    # Importer les tâches initiales
-    import import_tasks
+try:
+    if not os.path.exists('roadmap.db'):
+        init_db()
+        # Importer les tâches initiales
+        try:
+            import import_tasks
+            st.success("Tâches initiales importées avec succès!")
+        except Exception as e:
+            st.error(f"Erreur lors de l'importation des tâches: {str(e)}")
+except Exception as e:
+    st.error(f"Erreur lors de l'initialisation: {str(e)}")
+    sys.exit(1)
 
 # Style CSS personnalisé
 st.markdown("""
