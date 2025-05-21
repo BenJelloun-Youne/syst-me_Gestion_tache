@@ -164,17 +164,34 @@ def get_days_remaining(deadline):
     if pd.isna(deadline):
         return None
     deadline_date = datetime.strptime(deadline, '%Y-%m-%d')
-    today = datetime.now()
-    return (deadline_date - today).days
+    today = datetime.now().date()
+    return (deadline_date.date() - today).days
 
-def get_priority_color(days_remaining):
+def get_deadline_status(days_remaining, current_status):
     if days_remaining is None:
-        return "no-deadline"
+        return "Non définie"
     if days_remaining < 0:
-        return "urgent"
-    if days_remaining <= 7:
-        return "warning"
-    return "success"
+        if current_status == "OK":
+            return "Délai respecté"
+        else:
+            return "En retard"
+    elif days_remaining <= 7:
+        return "À surveiller"
+    else:
+        return "Dans les temps"
+
+def get_deadline_comment(days_remaining, current_status):
+    if days_remaining is None:
+        return "Non définie"
+    if days_remaining < 0:
+        if current_status == "OK":
+            return "Délai respecté"
+        else:
+            return f"En retard de {abs(days_remaining)} jours"
+    elif days_remaining <= 7:
+        return f"{days_remaining} jours restants"
+    else:
+        return f"{days_remaining} jours restants"
 
 # Sidebar
 with st.sidebar:
@@ -267,7 +284,7 @@ with tab1:
     # Affichage des tâches avec un design amélioré
     for _, row in filtered_df.iterrows():
         days_remaining = get_days_remaining(row['deadline'])
-        priority_class = get_priority_color(days_remaining)
+        priority_class = get_task_status_color(row['status'])
         
         with st.expander(f"📌 {row['task_name']}", expanded=False):
             col1, col2 = st.columns([2,1])
@@ -284,18 +301,21 @@ with tab1:
                 st.markdown(f"**Statut:** {status_color} {row['status']}")
                 st.markdown(f"**Responsable:** 👤 {row['responsible']}")
                 
-                deadline_text = row['deadline'] if pd.notna(row['deadline']) else "Non définie"
-                deadline_icon = "📅" if pd.notna(row['deadline']) else "⏳"
-                
                 if pd.notna(row['deadline']):
-                    if days_remaining < 0:
-                        st.markdown(f"**Deadline:** {deadline_icon} <span class='urgent'>En retard de {abs(days_remaining)} jours</span>", unsafe_allow_html=True)
-                    elif days_remaining <= 7:
-                        st.markdown(f"**Deadline:** {deadline_icon} <span class='warning'>{days_remaining} jours restants</span>", unsafe_allow_html=True)
+                    days_remaining = get_days_remaining(row['deadline'])
+                    deadline_status = get_deadline_status(days_remaining, row['status'])
+                    deadline_comment = get_deadline_comment(days_remaining, row['status'])
+                    
+                    if deadline_status == "En retard":
+                        st.markdown(f"**Deadline:** 📅 <span class='urgent'>{deadline_comment}</span>", unsafe_allow_html=True)
+                    elif deadline_status == "À surveiller":
+                        st.markdown(f"**Deadline:** 📅 <span class='warning'>{deadline_comment}</span>", unsafe_allow_html=True)
+                    elif deadline_status == "Délai respecté":
+                        st.markdown(f"**Deadline:** 📅 <span class='success'>{deadline_comment}</span>", unsafe_allow_html=True)
                     else:
-                        st.markdown(f"**Deadline:** {deadline_icon} <span class='success'>{days_remaining} jours restants</span>", unsafe_allow_html=True)
+                        st.markdown(f"**Deadline:** 📅 <span class='success'>{deadline_comment}</span>", unsafe_allow_html=True)
                 else:
-                    st.markdown(f"**Deadline:** {deadline_icon} <span class='no-deadline'>Non définie</span>", unsafe_allow_html=True)
+                    st.markdown(f"**Deadline:** ⏳ <span class='no-deadline'>Non définie</span>", unsafe_allow_html=True)
 
 with tab2:
     # Création du graphique Gantt
