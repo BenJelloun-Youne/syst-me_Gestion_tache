@@ -416,25 +416,32 @@ with tab2:
     
     # Couleurs pour les différents statuts
     colors = {
-        'en cours': '#ffc107',  # Jaune
-        'OK': '#007bff',       # Bleu
-        'non démarré': '#28a745'  # Vert
+        'OK': '#007bff',       # Bleu pour les tâches terminées
+        'en cours': '#ffc107',  # Jaune pour les tâches en cours
+        'non démarré': '#28a745'  # Vert pour les tâches non démarrées
     }
     
     # Calculer la plage de dates pour l'axe X
-    today = datetime.now().date()
-    min_date = today
-    max_date = today
+    min_date = None
+    max_date = None
     
-    # Trouver la date la plus éloignée dans les deadlines
+    # Trouver la première et la dernière date dans les deadlines
     for _, task in df.iterrows():
         if pd.notna(task['deadline']):
             deadline = datetime.strptime(task['deadline'], '%Y-%m-%d').date()
-            if deadline > max_date:
+            if min_date is None or deadline < min_date:
+                min_date = deadline
+            if max_date is None or deadline > max_date:
                 max_date = deadline
     
-    # Ajouter 30 jours à la date maximale pour la visualisation
-    max_date = max_date + timedelta(days=30)
+    # Si aucune date n'est trouvée, utiliser la date d'aujourd'hui
+    if min_date is None:
+        min_date = datetime.now().date()
+    if max_date is None:
+        max_date = min_date + timedelta(days=30)
+    else:
+        # Ajouter 30 jours à la date maximale pour la visualisation
+        max_date = max_date + timedelta(days=30)
     
     # Créer les dates pour l'axe X
     date_range = pd.date_range(start=min_date, end=max_date, freq='D')
@@ -443,24 +450,31 @@ with tab2:
     for _, task in df.iterrows():
         if pd.notna(task['deadline']):
             deadline = datetime.strptime(task['deadline'], '%Y-%m-%d')
-            start_date = deadline.replace(day=1)
             days_remaining = get_days_remaining(task['deadline'])
             
-            # Ajuster la couleur en fonction de la priorité
-            if days_remaining is None:
+            # Déterminer la couleur en fonction du statut
+            if task['status'] == 'OK':
+                color = colors['OK']  # Bleu pour les tâches terminées
+            elif days_remaining is None and task['status'] != 'OK':
                 color = '#ffc107'  # Jaune pour les tâches en retard
-            elif days_remaining <= 7:
-                color = '#ffc107'  # Jaune pour les tâches à surveiller
             else:
-                color = colors.get(task['status'], '#28a745')  # Vert par défaut
+                color = colors[task['status']]  # Couleur selon le statut
+            
+            # Calculer la position sur l'axe X
+            x_position = (deadline.date() - min_date).days
+            
+            # Créer le texte pour le tooltip
+            status_text = "Terminée" if task['status'] == 'OK' else (
+                "En retard" if days_remaining is None else f"{days_remaining} jours restants"
+            )
             
             fig.add_trace(go.Bar(
-                x=[(deadline - start_date).days],
+                x=[x_position],
                 y=[task['task_name']],
                 orientation='h',
                 name=task['task_name'],
                 marker_color=color,
-                text=[f"Deadline: {task['deadline']}<br>Responsable: {task['responsible']}<br>Jours restants: {days_remaining if days_remaining is not None else 'En retard'}"],
+                text=[f"Deadline: {task['deadline']}<br>Responsable: {task['responsible']}<br>Statut: {task['status']}<br>{status_text}"],
                 hovertemplate="<b>%{y}</b><br>%{text}<extra></extra>"
             ))
     
@@ -481,14 +495,16 @@ with tab2:
     )
     
     # Ajouter une ligne verticale pour la date d'aujourd'hui
-    today_index = (today - min_date).days
-    fig.add_vline(
-        x=today_index,
-        line_dash="dash",
-        line_color="red",
-        annotation_text="Aujourd'hui",
-        annotation_position="top right"
-    )
+    today = datetime.now().date()
+    if min_date <= today <= max_date:
+        today_index = (today - min_date).days
+        fig.add_vline(
+            x=today_index,
+            line_dash="dash",
+            line_color="red",
+            annotation_text="Aujourd'hui",
+            annotation_position="top right"
+        )
     
     st.plotly_chart(fig, use_container_width=True)
     
