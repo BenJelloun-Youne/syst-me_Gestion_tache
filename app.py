@@ -487,7 +487,7 @@ with tab2:
     
     # Couleurs pour les différents statuts
     colors = {
-        'OK': '#007bff',       # Bleu pour les tâches terminées
+        'ok': '#007bff',       # Bleu pour les tâches terminées
         'en cours': '#ffc107',  # Jaune pour les tâches en cours
         'non démarré': '#28a745'  # Vert pour les tâches non démarrées
     }
@@ -528,8 +528,9 @@ with tab2:
             days_remaining = get_days_remaining(task['deadline'])
             
             # Déterminer la couleur et le style en fonction du statut
-            if task['status'] == 'OK':
-                color = colors['OK']  # Bleu pour les tâches terminées
+            task_status = task['status'].lower()  # Convertir en minuscules
+            if task_status == 'ok':
+                color = colors['ok']  # Bleu pour les tâches terminées
                 status_text = "✅ Déployé"
                 # Ajouter une barre de progression complète depuis le début
                 start_date = min_date
@@ -552,7 +553,7 @@ with tab2:
                     """],
                     hovertemplate="%{text}<extra></extra>"
                 ))
-            elif task['status'] == 'en cours':
+            elif task_status == 'en cours':
                 color = colors['en cours']  # Jaune pour les tâches en cours
                 status_text = "🔄 En cours"
                 # Ajouter une barre de progression depuis le début jusqu'à aujourd'hui
@@ -578,8 +579,8 @@ with tab2:
                     hovertemplate="%{text}<extra></extra>"
                 ))
             else:
-                color = colors[task['status']]  # Couleur selon le statut
-                status_text = "⏳ En attente" if task['status'] == 'non démarré' else "⚠️ En retard"
+                color = colors['non démarré']  # Couleur par défaut pour les autres statuts
+                status_text = "⏳ En attente" if task_status == 'non démarré' else "⚠️ En retard"
                 
                 # Ajouter la barre depuis le début jusqu'à aujourd'hui ou la deadline
                 start_date = min_date
