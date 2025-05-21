@@ -1,1 +1,1 @@
-python-dateutil 
+# Ce fichier est vide car nous n'avons pas besoin de packages système spécifiques 
