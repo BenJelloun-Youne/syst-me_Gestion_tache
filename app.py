@@ -66,6 +66,42 @@ def add_task(task_name, description, status, responsible, deadline, comments):
         st.error(f"Erreur lors de l'ajout de la tâche: {str(e)}")
         return False
 
+# Fonction pour mettre à jour le statut d'une tâche
+def update_task_status(task_id, new_status):
+    try:
+        db_path = get_db_path()
+        conn = sqlite3.connect(db_path)
+        c = conn.cursor()
+        c.execute('''
+            UPDATE tasks 
+            SET status = ? 
+            WHERE id = ?
+        ''', (new_status, task_id))
+        conn.commit()
+        conn.close()
+        return True
+    except Exception as e:
+        st.error(f"Erreur lors de la mise à jour du statut: {str(e)}")
+        return False
+
+# Fonction pour mettre à jour les commentaires d'une tâche
+def update_task_comments(task_id, new_comments):
+    try:
+        db_path = get_db_path()
+        conn = sqlite3.connect(db_path)
+        c = conn.cursor()
+        c.execute('''
+            UPDATE tasks 
+            SET comments = ? 
+            WHERE id = ?
+        ''', (new_comments, task_id))
+        conn.commit()
+        conn.close()
+        return True
+    except Exception as e:
+        st.error(f"Erreur lors de la mise à jour des commentaires: {str(e)}")
+        return False
+
 # Initialiser la base de données si elle n'existe pas
 try:
     db_path = get_db_path()
@@ -676,39 +712,4 @@ with tab3:
                     deadline.strftime("%Y-%m-%d") if has_deadline and deadline else None,
                     comments
                 )
-                st.success("✅ Tâche ajoutée avec succès!")
-
-# Ajouter ces nouvelles fonctions après les fonctions existantes
-def update_task_status(task_id, new_status):
-    try:
-        db_path = get_db_path()
-        conn = sqlite3.connect(db_path)
-        c = conn.cursor()
-        c.execute('''
-            UPDATE tasks 
-            SET status = ? 
-            WHERE id = ?
-        ''', (new_status, task_id))
-        conn.commit()
-        conn.close()
-        return True
-    except Exception as e:
-        st.error(f"Erreur lors de la mise à jour du statut: {str(e)}")
-        return False
-
-def update_task_comments(task_id, new_comments):
-    try:
-        db_path = get_db_path()
-        conn = sqlite3.connect(db_path)
-        c = conn.cursor()
-        c.execute('''
-            UPDATE tasks 
-            SET comments = ? 
-            WHERE id = ?
-        ''', (new_comments, task_id))
-        conn.commit()
-        conn.close()
-        return True
-    except Exception as e:
-        st.error(f"Erreur lors de la mise à jour des commentaires: {str(e)}")
-        return False 
+                st.success("✅ Tâche ajoutée avec succès!") 
