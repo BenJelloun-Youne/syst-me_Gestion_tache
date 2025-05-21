@@ -125,7 +125,7 @@ st.markdown("""
         background-color: #45a049;
     }
     .no-deadline {
-        color: #666;
+        color: #28a745;
         font-style: italic;
     }
     .metric-card {
@@ -139,7 +139,7 @@ st.markdown("""
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
     .urgent {
-        color: #dc3545;
+        color: #ffc107;
         font-weight: bold;
     }
     .warning {
@@ -147,7 +147,7 @@ st.markdown("""
         font-weight: bold;
     }
     .success {
-        color: #28a745;
+        color: #007bff;
         font-weight: bold;
     }
     </style>
@@ -307,7 +307,7 @@ with tab1:
                     deadline_comment = get_deadline_comment(days_remaining, row['status'])
                     
                     if deadline_status == "En retard":
-                        st.markdown(f"**Deadline:** 📅 <span class='urgent'>{deadline_comment}</span>", unsafe_allow_html=True)
+                        st.markdown(f"**Deadline:** 📅 <span class='warning'>{deadline_comment}</span>", unsafe_allow_html=True)
                     elif deadline_status == "À surveiller":
                         st.markdown(f"**Deadline:** 📅 <span class='warning'>{deadline_comment}</span>", unsafe_allow_html=True)
                     elif deadline_status == "Délai respecté":
