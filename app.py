@@ -476,9 +476,13 @@ with tab2:
             if task['status'] == 'OK':
                 color = colors['OK']  # Bleu pour les tâches terminées
                 status_text = "✅ Déployé"
-                # Ajouter une barre de progression complète
+                # Ajouter une barre de progression complète depuis le début
+                start_date = min_date
+                end_date = deadline.date()
+                duration = (end_date - start_date).days
+                
                 fig.add_trace(go.Bar(
-                    x=[(deadline.date() - min_date).days],
+                    x=[duration],
                     y=[task['task_name']],
                     orientation='h',
                     name=task['task_name'],
@@ -496,13 +500,14 @@ with tab2:
             elif task['status'] == 'en cours':
                 color = colors['en cours']  # Jaune pour les tâches en cours
                 status_text = "🔄 En cours"
-                # Ajouter une barre de progression partielle
-                progress_position = (today - min_date).days
-                deadline_position = (deadline.date() - min_date).days
+                # Ajouter une barre de progression depuis le début jusqu'à aujourd'hui
+                start_date = min_date
+                end_date = today
+                duration = (end_date - start_date).days
                 
                 # Barre de progression
                 fig.add_trace(go.Bar(
-                    x=[progress_position],
+                    x=[duration],
                     y=[task['task_name']],
                     orientation='h',
                     name=task['task_name'],
@@ -521,9 +526,14 @@ with tab2:
                 color = colors[task['status']]  # Couleur selon le statut
                 status_text = "⏳ En attente" if task['status'] == 'non démarré' else "⚠️ En retard"
                 
+                # Ajouter la barre depuis le début jusqu'à aujourd'hui ou la deadline
+                start_date = min_date
+                end_date = min(today, deadline.date())
+                duration = (end_date - start_date).days
+                
                 # Ajouter la barre
                 fig.add_trace(go.Bar(
-                    x=[(deadline.date() - min_date).days],
+                    x=[duration],
                     y=[task['task_name']],
                     orientation='h',
                     name=task['task_name'],
