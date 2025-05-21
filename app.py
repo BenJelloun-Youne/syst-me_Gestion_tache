@@ -73,7 +73,8 @@ try:
         init_db()
         # Importer les tâches initiales
         try:
-            import import_tasks
+            from import_tasks import import_tasks
+            import_tasks()
             st.success("Tâches initiales importées avec succès!")
         except Exception as e:
             st.error(f"Erreur lors de l'importation des tâches: {str(e)}")
