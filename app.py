@@ -383,15 +383,29 @@ with tab1:
             col1, col2 = st.columns([2,1])
             with col1:
                 st.markdown(f"**Description:** {row['description']}")
-                st.markdown(f"**Commentaires:** {row['comments']}")
+                
+                # Ajouter un formulaire pour modifier les commentaires
+                with st.form(f"comment_form_{row['id']}"):
+                    new_comments = st.text_area("💬 Commentaires", value=row['comments'], key=f"comments_{row['id']}")
+                    if st.form_submit_button("💾 Mettre à jour les commentaires"):
+                        if update_task_comments(row['id'], new_comments):
+                            st.success("✅ Commentaires mis à jour avec succès!")
+                            st.rerun()
+            
             with col2:
-                status_icons = {
-                    "OK": "🟢",
-                    "en cours": "🟡",
-                    "non démarré": "⚪"
-                }
-                status_color = status_icons.get(row['status'], "⚪")
-                st.markdown(f"**Statut:** {status_color} {row['status']}")
+                # Ajouter un sélecteur pour modifier le statut
+                with st.form(f"status_form_{row['id']}"):
+                    new_status = st.selectbox(
+                        "📊 Statut",
+                        ["Non démarré", "En cours", "OK"],
+                        index=["Non démarré", "En cours", "OK"].index(row['status']),
+                        key=f"status_{row['id']}"
+                    )
+                    if st.form_submit_button("🔄 Mettre à jour le statut"):
+                        if update_task_status(row['id'], new_status):
+                            st.success("✅ Statut mis à jour avec succès!")
+                            st.rerun()
+                
                 st.markdown(f"**Responsable:** 👤 {row['responsible']}")
                 
                 if pd.notna(row['deadline']):
@@ -657,4 +671,39 @@ with tab3:
                     deadline.strftime("%Y-%m-%d") if has_deadline and deadline else None,
                     comments
                 )
-                st.success("✅ Tâche ajoutée avec succès!") 
+                st.success("✅ Tâche ajoutée avec succès!")
+
+# Ajouter ces nouvelles fonctions après les fonctions existantes
+def update_task_status(task_id, new_status):
+    try:
+        db_path = get_db_path()
+        conn = sqlite3.connect(db_path)
+        c = conn.cursor()
+        c.execute('''
+            UPDATE tasks 
+            SET status = ? 
+            WHERE id = ?
+        ''', (new_status, task_id))
+        conn.commit()
+        conn.close()
+        return True
+    except Exception as e:
+        st.error(f"Erreur lors de la mise à jour du statut: {str(e)}")
+        return False
+
+def update_task_comments(task_id, new_comments):
+    try:
+        db_path = get_db_path()
+        conn = sqlite3.connect(db_path)
+        c = conn.cursor()
+        c.execute('''
+            UPDATE tasks 
+            SET comments = ? 
+            WHERE id = ?
+        ''', (new_comments, task_id))
+        conn.commit()
+        conn.close()
+        return True
+    except Exception as e:
+        st.error(f"Erreur lors de la mise à jour des commentaires: {str(e)}")
+        return False 
